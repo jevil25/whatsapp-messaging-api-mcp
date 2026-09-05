@@ -1,0 +1,104 @@
+name: Publish
+
+# Publishes to npm when the version in package.json changes on main.
+#
+# package.json is the single source of truth — no tags to cut, no release to
+# make. Bump the version, merge, it publishes. Leave the version alone and the
+# job skips, so this is safe to run on every push.
+#
+# Publishing is irreversible: npm's unpublish window is 72 hours and does not
+# free the name, so a bad version number is permanent. That is why the smoke
+# test gates the publish rather than running after it.
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  id-token: write # npm provenance
+
+concurrency:
+  group: publish
+  cancel-in-progress: false
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          registry-url: 'https://registry.npmjs.org'
+
+      # `npm view` exits non-zero when the version does not exist, which is also
+      # what a network failure looks like. That is the safe direction to fail: a
+      # false "not published" attempts a publish npm then rejects, rather than
+      # silently skipping a real release.
+      - name: Check whether this version is already on npm
+        id: check
+        run: |
+          name=$(node -p "require('./package.json').name")
+          version=$(node -p "require('./package.json').version")
+          echo "Local: $name@$version"
+          if npm view "$name@$version" version >/dev/null 2>&1; then
+            echo "published=true" >> "$GITHUB_OUTPUT"
+            echo "::notice::$name@$version is already on npm. Bump the version to publish."
+          else
+            echo "published=false" >> "$GITHUB_OUTPUT"
+            echo "::notice::$name@$version is not on npm — will publish."
+          fi
+          echo "pkg=$name@$version" >> "$GITHUB_OUTPUT"
+
+      - name: Install
+        if: steps.check.outputs.published == 'false'
+        run: npm ci
+
+      - name: Build
+        if: steps.check.outputs.published == 'false'
+        run: npm run build
+
+      # Boots the built server over stdio and drives a real MCP handshake.
+      # Catches what compilation cannot: an SDK/zod mismatch breaking schema
+      # serialization at tools/list, a tool dropped, a version disagreeing
+      # across the files that carry it, or a missing mcpName — which the MCP
+      # registry requires and whose absence already cost two version numbers.
+      - name: Smoke test
+        if: steps.check.outputs.published == 'false'
+        run: node smoke-test.mjs
+
+      # --provenance signs an attestation linking the tarball to this workflow
+      # run, and npm shows it on the package page. It requires a public
+      # repository, which is the whole reason this project lives in its own repo
+      # rather than inside the private monorepo.
+      - name: Publish
+        if: steps.check.outputs.published == 'false'
+        run: npm publish --provenance --access public
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+
+      - name: Summary
+        if: always()
+        run: |
+          {
+            if [ "${{ steps.check.outputs.published }}" = "false" ]; then
+              echo "### Published \`${{ steps.check.outputs.pkg }}\`"
+              echo ""
+              echo "https://www.npmjs.com/package/whatsapp-messaging-api-mcp"
+              echo ""
+              echo "The MCP registry is a separate step and does not happen automatically:"
+              echo ""
+              echo '```'
+              echo "mcp-publisher publish"
+              echo '```'
+            else
+              echo "### Skipped — \`${{ steps.check.outputs.pkg }}\` is already on npm"
+              echo ""
+              echo "Bump the version in \`package.json\`, \`src/index.ts\` and \`server.json\` (twice) to publish."
+            fi
+          } >> "$GITHUB_STEP_SUMMARY"

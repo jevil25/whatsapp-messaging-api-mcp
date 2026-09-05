@@ -1,0 +1,30 @@
+{
+  "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
+  "name": "io.github.jevil25/whatsapp-messaging-api-mcp",
+  "title": "WhatsApp Messaging API",
+  "description": "Send WhatsApp messages from Claude. No Meta Business approval or WhatsApp Business account.",
+  "repository": {
+    "url": "https://github.com/jevil25/whatsapp-messaging-api-mcp",
+    "source": "github"
+  },
+  "version": "1.0.3",
+  "packages": [
+    {
+      "registryType": "npm",
+      "identifier": "whatsapp-messaging-api-mcp",
+      "version": "1.0.3",
+      "transport": {
+        "type": "stdio"
+      },
+      "environmentVariables": [
+        {
+          "name": "WHATSAPP_API_KEY",
+          "description": "RapidAPI key for the WhatsApp Messaging API. Free tier, no credit card.",
+          "isRequired": true,
+          "isSecret": true,
+          "format": "string"
+        }
+      ]
+    }
+  ]
+}

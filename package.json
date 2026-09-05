@@ -1,0 +1,57 @@
+{
+  "name": "whatsapp-messaging-api-mcp",
+  "version": "1.0.3",
+  "mcpName": "io.github.jevil25/whatsapp-messaging-api-mcp",
+  "homepage": "https://whatsapp-messaging.retentionstack.agency",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/jevil25/whatsapp-messaging-api-mcp.git"
+  },
+  "bugs": {
+    "url": "https://github.com/jevil25/whatsapp-messaging-api-mcp/issues"
+  },
+  "description": "MCP server for sending WhatsApp messages from Claude and other MCP clients. No Meta Business approval, no WhatsApp Business account \u2014 scan a QR code and send.",
+  "keywords": [
+    "mcp",
+    "model-context-protocol",
+    "mcp-server",
+    "whatsapp",
+    "whatsapp-api",
+    "whatsapp-bot",
+    "messaging",
+    "claude",
+    "claude-desktop",
+    "ai-agent",
+    "automation",
+    "rapidapi"
+  ],
+  "author": "Retention Stack",
+  "type": "module",
+  "bin": {
+    "whatsapp-messaging-api-mcp": "./dist/index.js"
+  },
+  "main": "dist/index.js",
+  "scripts": {
+    "build": "tsc",
+    "start": "node dist/index.js",
+    "dev": "tsx src/index.ts",
+    "test": "node smoke-test.mjs",
+    "prepublishOnly": "npm run build && npm test"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.30.0",
+    "zod": "^4.3.6"
+  },
+  "devDependencies": {
+    "@types/node": "^20.11.25",
+    "tsx": "^4.7.1",
+    "typescript": "^5.4.2"
+  },
+  "license": "MIT",
+  "files": [
+    "dist"
+  ]
+}
