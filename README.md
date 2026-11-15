@@ -46,7 +46,7 @@ Nothing to install or build — `npx` fetches the package on first run.
 ## Typical flow
 
 1. `create_session` → `get_qr_code` → scan with WhatsApp (Settings → Linked Devices)
-2. `get_session_status` until it reports `WORKING`
+2. `get_session_status` until it reports `WORKING`. If it reports `PASSKEY_REQUIRED` or `PASSKEY_CONFIRMATION_REQUIRED`, finish linking in the [console](https://whatsapp-messaging.retentionstack.agency/app): the passkey is signed in a browser, which an MCP client cannot do.
 3. `check_contact_exists`, then `send_text_message` / `send_image` / `send_file`
 
 Sessions stay authenticated between runs, so steps 1-2 are one-time per number.

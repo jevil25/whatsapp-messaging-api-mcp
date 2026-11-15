@@ -66,7 +66,8 @@ server.registerTool(
 server.registerTool(
   'get_session_status',
   {
-    description: 'Get the current status of a session (STARTING, SCAN_QR_CODE, WORKING, FAILED, STOPPED).',
+    description:
+      'Get the current status of a session (STARTING, SCAN_QR_CODE, WORKING, FAILED, STOPPED, PASSKEY_REQUIRED, PASSKEY_CONFIRMATION_REQUIRED). PASSKEY_* means WhatsApp wants a passkey, which must be signed in a browser: tell the user to finish linking at https://whatsapp-messaging.retentionstack.agency/app. These tools cannot do it.',
     inputSchema: {
       session,
     },
