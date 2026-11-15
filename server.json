@@ -7,19 +7,19 @@
     "url": "https://github.com/jevil25/whatsapp-messaging-api-mcp",
     "source": "github"
   },
-  "version": "1.0.3",
+  "version": "2.0.0",
   "packages": [
     {
       "registryType": "npm",
       "identifier": "whatsapp-messaging-api-mcp",
-      "version": "1.0.3",
+      "version": "2.0.0",
       "transport": {
         "type": "stdio"
       },
       "environmentVariables": [
         {
           "name": "WHATSAPP_API_KEY",
-          "description": "RapidAPI key for the WhatsApp Messaging API. Free tier, no credit card.",
+          "description": "Session token (ch_live_...) or account key (ak_live_...) from whatsapp-messaging.retentionstack.agency/app. Free tier, no credit card.",
           "isRequired": true,
           "isSecret": true,
           "format": "string"

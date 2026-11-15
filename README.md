@@ -2,11 +2,13 @@
 
 Send WhatsApp messages from Claude, Cursor, or any MCP client. Create a session, scan a QR code, and send text, images and files — **no Meta Business approval and no WhatsApp Business account required.**
 
-Wraps the [WhatsApp Messaging API](https://rapidapi.com/jevil257/api/whatsapp-messaging-bot).
+Wraps the [WhatsApp Messaging API](https://whatsapp-messaging.retentionstack.agency) by Retention Stack.
 
 ## Quick start
 
-1. Get a free API key from [RapidAPI](https://rapidapi.com/jevil257/api/whatsapp-messaging-bot) — no credit card.
+1. Sign in at [whatsapp-messaging.retentionstack.agency/start](https://whatsapp-messaging.retentionstack.agency/start) (free tier, no credit card) and copy a key from the console:
+   - a session token (`ch_live_...`) for one number. Tools then need no session name.
+   - an account key (`ak_live_...`) for every number on your account. Needed for `create_session`; pass `session` to the other tools.
 2. Add this to your MCP client config (Claude Desktop: `claude_desktop_config.json`):
 
    ```json
@@ -16,7 +18,7 @@ Wraps the [WhatsApp Messaging API](https://rapidapi.com/jevil257/api/whatsapp-me
          "command": "npx",
          "args": ["-y", "whatsapp-messaging-api-mcp"],
          "env": {
-           "WHATSAPP_API_KEY": "your-rapidapi-key"
+           "WHATSAPP_API_KEY": "ch_live_your_session_token"
          }
        }
      }
@@ -32,7 +34,7 @@ Nothing to install or build — `npx` fetches the package on first run.
 | Tool | Description |
 |---|---|
 | `list_sessions` | List all sessions on this API key |
-| `create_session` | Create a new session |
+| `create_session` | Create a new session (account key only) |
 | `get_session_status` | Check a session's current status |
 | `get_qr_code` | Get the QR code to authenticate a session |
 | `request_pairing_code` | Get an 8-digit pairing code instead of a QR |
@@ -53,9 +55,11 @@ Sessions stay authenticated between runs, so steps 1-2 are one-time per number.
 
 | Variable | Required | Description |
 |---|---|---|
-| `WHATSAPP_API_KEY` | yes | Your RapidAPI key. The server exits on startup if it is missing. |
+| `WHATSAPP_API_KEY` | yes | A session token (`ch_live_...`) or account key (`ak_live_...`). The server exits on startup if it is missing. |
 
 The key is read from the environment and sent only to the API host. It is never logged.
+
+Upgrading from 1.x: earlier versions used a RapidAPI key, which no longer works. Replace it with a session token or account key from the console.
 
 ## Local development
 

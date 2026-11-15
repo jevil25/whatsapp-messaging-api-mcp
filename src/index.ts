@@ -3,12 +3,11 @@ import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js';
 import { z } from 'zod';
 
-const API_HOST = 'whatsapp-messaging-bot.p.rapidapi.com';
-const BASE_URL = `https://${API_HOST}`;
+const BASE_URL = 'https://wp-rapidapi.retentionstack.agency';
 const API_KEY = process.env.WHATSAPP_API_KEY;
 
 if (!API_KEY) {
-  console.error('Missing WHATSAPP_API_KEY environment variable. Get a free key at https://rapidapi.com/jevil257/api/whatsapp-messaging-bot');
+  console.error('Missing WHATSAPP_API_KEY environment variable. Sign in at https://whatsapp-messaging.retentionstack.agency/start and copy a session token (ch_live_...) or account key (ak_live_...)');
   process.exit(1);
 }
 
@@ -21,8 +20,7 @@ async function callApi(method: string, path: string, body?: unknown, query?: Rec
   const res = await fetch(url, {
     method,
     headers: {
-      'x-rapidapi-key': API_KEY!,
-      'x-rapidapi-host': API_HOST,
+      Authorization: `Bearer ${API_KEY}`,
       'Content-Type': 'application/json',
     },
     body: body ? JSON.stringify(body) : undefined,
@@ -39,9 +37,12 @@ function toolResult(result: { status: number; data: unknown }) {
   };
 }
 
+// "me" resolves to the session token's own number; an account key needs the real session name.
+const session = z.string().default('me').describe('Session name. Leave out when using a session token (ch_live_...).');
+
 const server = new McpServer({
   name: 'whatsapp-messaging-api',
-  version: '1.0.3',
+  version: '2.0.0',
 });
 
 server.registerTool(
@@ -56,12 +57,10 @@ server.registerTool(
 server.registerTool(
   'create_session',
   {
-    description: 'Create a new WhatsApp session. Returns a session name and STARTING status — pair it with get_qr_code next.',
-    inputSchema: {
-      name: z.string().optional().describe('Optional session name. Auto-generated if omitted.'),
-    },
+    description: 'Create a new WhatsApp session. Needs an account key (ak_live_...). Returns the session name and its own session token; pair it with get_qr_code next.',
+    inputSchema: {},
   },
-  async ({ name }) => toolResult(await callApi('POST', '/v1/sessions', name ? { name } : {}))
+  async () => toolResult(await callApi('POST', '/v1/sessions', {}))
 );
 
 server.registerTool(
@@ -69,7 +68,7 @@ server.registerTool(
   {
     description: 'Get the current status of a session (STARTING, SCAN_QR_CODE, WORKING, FAILED, STOPPED).',
     inputSchema: {
-      session: z.string().describe('Session name'),
+      session,
     },
   },
   async ({ session }) => toolResult(await callApi('GET', `/v1/sessions/${encodeURIComponent(session)}`))
@@ -80,7 +79,7 @@ server.registerTool(
   {
     description: 'Get the QR code to authenticate a session by scanning with WhatsApp (Settings > Linked Devices).',
     inputSchema: {
-      session: z.string().describe('Session name'),
+      session,
     },
   },
   async ({ session }) =>
@@ -92,7 +91,7 @@ server.registerTool(
   {
     description: 'Request an 8-digit pairing code as an alternative to scanning a QR code.',
     inputSchema: {
-      session: z.string().describe('Session name'),
+      session,
       phoneNumber: z.string().regex(/^\d{10,15}$/).describe('Phone number, 10-15 digits, no + or spaces'),
     },
   },
@@ -105,7 +104,7 @@ server.registerTool(
   {
     description: 'Check whether a phone number is registered on WhatsApp before sending to it.',
     inputSchema: {
-      session: z.string().describe('Session name'),
+      session,
       phone: z.string().regex(/^\d{10,15}$/).describe('Phone number, 10-15 digits, no + or spaces'),
     },
   },
@@ -118,7 +117,7 @@ server.registerTool(
   {
     description: 'Send a WhatsApp text message to a contact, group, or channel.',
     inputSchema: {
-      session: z.string().describe('Session name'),
+      session,
       chatId: z.string().describe('Recipient: a phone number (e.g. "14155552671"), a group ID, or a channel ID'),
       text: z.string().describe('Message text'),
     },
@@ -132,7 +131,7 @@ server.registerTool(
   {
     description: 'Send an image to a contact, group, or channel via a public URL.',
     inputSchema: {
-      session: z.string().describe('Session name'),
+      session,
       chatId: z.string().describe('Recipient: phone number, group ID, or channel ID'),
       imageUrl: z.string().url().describe('Public URL of the image'),
       caption: z.string().optional().describe('Optional caption'),
@@ -154,7 +153,7 @@ server.registerTool(
   {
     description: 'Send a file (PDF, document, etc.) to a contact, group, or channel via a public URL.',
     inputSchema: {
-      session: z.string().describe('Session name'),
+      session,
       chatId: z.string().describe('Recipient: phone number, group ID, or channel ID'),
       fileUrl: z.string().url().describe('Public URL of the file'),
       filename: z.string().optional().describe('Filename to display in the chat'),
